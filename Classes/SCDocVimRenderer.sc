@@ -144,7 +144,8 @@ SCDocVimRenderer {
 		if(escape) { linkText = this.escapeSpecialChars(linkText) };
 
 		// Return a well-formatted <a> tag using the target and link text
-		^"<a href=\"" ++ linkTarget ++ "\">" ++ linkText ++ "</a>";
+		// ^"<a href=\"" ++ linkTarget ++ "\">" ++ linkText ++ "</a>";
+		^"|" ++ linkText ++ "|";
 	}
 
 	*makeArgString {|m, par=true|
@@ -155,16 +156,16 @@ SCDocVimRenderer {
 		l.do {|a,i|
 			if (i>0) { //skip 'this' (first arg)
 				if(i==last and: {m.varArgs}) {
-					res = res ++ " <span class='argstr'>" ++ "... " ++ a;
+					res = res ++ " " ++ "... " ++ a;
 				} {
 					if (i>1) { res = res ++ ", " };
-					res = res ++ "<span class='argstr'>" ++ a;
+					res = res ++ a;
 					(value = m.prototypeFrame[i]) !? {
 						value = if(value.class===Float) { value.asString } { value.cs };
 						res = res ++ ": " ++ value;
 					};
 				};
-				res = res ++ "</span>";
+				res = res ++ " ";
 			};
 		};
 		if (res.notEmpty and: par) {
@@ -192,163 +193,147 @@ SCDocVimRenderer {
 			{ (thisProcess.platform.name === \windows) and: { folder == "Help" } }
 		};
 
-		stream
-		<< "<!doctype html>"
-		<< "<html lang='en'>"
-		<< "<head><title>";
+		stream << "*%* ".format(doc.title);
 
 		if(thisIsTheMainHelpFile) {
 			stream << "SuperCollider " << Main.version << " Help";
 		} {
-			stream << doc.title << " | SuperCollider " << Main.version << " Help";
+			stream << " | SuperCollider " << Main.version << " | Help";
 		};
 
 		stream
-		<< "</title>\n"
-		<< "<link rel='stylesheet' href='" << baseDir << "/scdoc.css' type='text/css' />\n"
-		<< "<link rel='stylesheet' href='" << baseDir << "/frontend.css' type='text/css' />\n"
-		<< "<link rel='stylesheet' href='" << baseDir << "/custom.css' type='text/css' />\n"
-		<< "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />\n"
-		<< "<script>\n"
-		<< "var helpRoot = '" << baseDir << "';\n"
-		<< "var scdoc_title = '" << doc.title.escapeChar($') << "';\n"
-		<< "var scdoc_sc_version = '" << Main.version << "';\n"
-		<< "</script>\n"
-		<< "<script src='" << baseDir << "/scdoc.js' type='text/javascript'></script>\n"
-		<< "<script src='" << baseDir << "/docmap.js' type='text/javascript'></script>\n" // FIXME: remove?
-		<< "<script src='" << baseDir << "/prettify.js' type='text/javascript'></script>\n"
-		<< "<script src='" << baseDir << "/lang-sc.js' type='text/javascript'></script>\n"
-		<< "</head>\n";
+		// << doc.title.escapeChar($') << "\n"
+		<< "Version: " << Main.version << "\n";
 
-		stream
-		<< "<body onload='fixTOC();prettyPrint()'>\n";
+		// stream
+		// << "<body onload='fixTOC();prettyPrint()'>\n";
 
+		// displayedTitle = if(
+		// 	thisIsTheMainHelpFile,
+		// 	{ "SuperCollider " ++ Main.version },
+		// 	{ doc.title }
+		// );
 
-		displayedTitle = if(
-			thisIsTheMainHelpFile,
-			{ "SuperCollider " ++ Main.version },
-			{ doc.title }
-		);
+		// stream
+		// << "<div id='toc'>\n"
+		// << "<div id='toctitle'>" << displayedTitle << ":</div>\n"
+		// << "<span class='toc_search'>Filter: <input id='toc_search'></span>";
+		// this.renderTOC(stream, body);
+		// stream << "</div>";
 
-		stream
-		<< "<div id='toc'>\n"
-		<< "<div id='toctitle'>" << displayedTitle << ":</div>\n"
-		<< "<span class='toc_search'>Filter: <input id='toc_search'></span>";
-		this.renderTOC(stream, body);
-		stream << "</div>";
+		// stream
+		// << "<div class='contents'>\n"
+		// << "<div id='menubar'></div>\n"
+		// << "<div class='header'>\n";
 
-		stream
-		<< "<div class='contents'>\n"
-		<< "<div id='menubar'></div>\n"
-		<< "<div class='header'>\n";
+		// if(thisIsTheMainHelpFile.not) {
+		// 	stream
+		// 	<< "<div id='label'>\n"
+		// 	<< "<span id='folder'>" << folder.asString;
+		// 	if(doc.isExtension) {
+		// 		stream << " (extension)";
+		// 	};
+		// 	stream << "</span>\n";
 
-		if(thisIsTheMainHelpFile.not) {
-			stream
-			<< "<div id='label'>\n"
-			<< "<span id='folder'>" << folder.asString;
-			if(doc.isExtension) {
-				stream << " (extension)";
-			};
-			stream << "</span>\n";
+		// 	doc.categories !? {
+		// 		// Prevent the label from starting with "|".
+		// 		if(folder.asString.size > 0) {
+		// 			stream << " | "
+		// 		};
 
-			doc.categories !? {
-				// Prevent the label from starting with "|".
-				if(folder.asString.size > 0) {
-					stream << " | "
-				};
+		// 		stream << "<span id='categories'>"
 
-				stream << "<span id='categories'>"
+		// 		<< (doc.categories.collect { | path |
+		// 			// get all the components of a category path ("UGens>Generators>Deterministic")
+		// 			// we link each crumb of the breadcrumbs separately.
+		// 			var pathElems = path.split($>);
 
-				<< (doc.categories.collect { | path |
-					// get all the components of a category path ("UGens>Generators>Deterministic")
-					// we link each crumb of the breadcrumbs separately.
-					var pathElems = path.split($>);
+		// 			// the href for "UGens" will be "UGens", for "Generators" "UGens>Generators", etc.
+		// 			pathElems.collect { | elem, i |
+		// 				var atag = "<a href='" ++ baseDir +/+ "Browse.html#";
+		// 				atag ++ pathElems[0..i].join(">") ++ "'>"++ elem ++"</a>"
+		// 			}.join("&#8201;&gt;&#8201;"); // &#8201; is a thin space
 
-					// the href for "UGens" will be "UGens", for "Generators" "UGens>Generators", etc.
-					pathElems.collect { | elem, i |
-						var atag = "<a href='" ++ baseDir +/+ "Browse.html#";
-						atag ++ pathElems[0..i].join(">") ++ "'>"++ elem ++"</a>"
-					}.join("&#8201;&gt;&#8201;"); // &#8201; is a thin space
+		// 		}.join(" | "))
 
-				}.join(" | "))
+		// 		<< "</span>\n";
+		// 	};
 
-				<< "</span>\n";
-			};
+		// 	stream << "</div>";
+		// };
 
-			stream << "</div>";
-		};
+		// stream << "<h1>" << displayedTitle;
+		// if(thisIsTheMainHelpFile) {
+		// 	stream << "<span class='headerimage'><img src='" << baseDir << "/images/SC_icon.png'/></span>";
+		// };
+		// if(doc.isClassDoc and: { currentClass.notNil } and: { currentClass != Object }) {
+		// 	stream << "<span id='superclasses'>"
+		// 	<< " : "
+		// 	<< (currentClass.superclasses.collect {|c|
+		// 		"<a href=\"../Classes/"++c.name++".html\">"++c.name++"</a>"
+		// 	}.join(" : "))
+		// 	<< "</span>\n";
+		// };
+		// if(doc.isExtension) {
+		// 	stream
+		// 	<< "<div class='extension-indicator-ctr' title='This help file originates from a third-party quark or plugin for SuperCollider.'>"
+		// 	<< "<img class='extension-indicator-icon' alt='Extension' src='" << baseDir << "/images/plugin.png'>"
+		// 	<< "<span class='extension-indicator-text'>Extension</span>"
+		// 	<< "</div>";
+		// };
+		// stream
+		// << "</h1>\n"
+		// << "<div id='summary'>" << this.escapeSpecialChars(doc.summary) << "</div>\n"
+		// << "</div>\n"
+		// << "<div class='subheader'>\n";
 
-		stream << "<h1>" << displayedTitle;
-		if(thisIsTheMainHelpFile) {
-			stream << "<span class='headerimage'><img src='" << baseDir << "/images/SC_icon.png'/></span>";
-		};
-		if(doc.isClassDoc and: { currentClass.notNil } and: { currentClass != Object }) {
-			stream << "<span id='superclasses'>"
-			<< " : "
-			<< (currentClass.superclasses.collect {|c|
-				"<a href=\"../Classes/"++c.name++".html\">"++c.name++"</a>"
-			}.join(" : "))
-			<< "</span>\n";
-		};
-		if(doc.isExtension) {
-			stream
-			<< "<div class='extension-indicator-ctr' title='This help file originates from a third-party quark or plugin for SuperCollider.'>"
-			<< "<img class='extension-indicator-icon' alt='Extension' src='" << baseDir << "/images/plugin.png'>"
-			<< "<span class='extension-indicator-text'>Extension</span>"
-			<< "</div>";
-		};
-		stream
-		<< "</h1>\n"
-		<< "<div id='summary'>" << this.escapeSpecialChars(doc.summary) << "</div>\n"
-		<< "</div>\n"
-		<< "<div class='subheader'>\n";
+		// if(doc.isClassDoc) {
+		// 	if(currentClass.notNil) {
+		// 		m = currentClass.filenameSymbol.asString;
+		// 		stream << "<div id='filename'>Source: "
+		// 		<< "<a href='%' title='%'>".format(URI.fromLocalPath(m).asString, m)
+		// 		<< m.basename << "</a></div>";
+		// 		if(currentClass.subclasses.notNil) {
+		// 			z = false;
+		// 			stream << "<div id='subclasses'>"
+		// 			<< "Subclasses: "
+		// 			<< (currentClass.subclasses.collect(_.name).sort.collect {|c,i|
+		// 				if(i==4,{z=true;"<span id='hiddensubclasses' style='display:none;'>"},{""})
+		// 				++"<a href=\"../Classes/"++c++".html\">"++c++"</a>"
+		// 			}.join(", "));
+		// 			if(z) {
+		// 				stream << "</span><a class='subclass_toggle' href='#' onclick='javascript:showAllSubclasses(this); return false'>&hellip;&nbsp;see&nbsp;all</a>";
+		// 			};
+		// 			stream << "</div>\n";
+		// 		};
+		// 		if(currentImplClass.notNil) {
+		// 			stream << "<div class='inheritance'>Implementing class: "
+		// 			<< "<a href=\"../Classes/" << currentImplClass.name << ".html\">"
+		// 			<< currentImplClass.name << "</a></div>\n";
+		// 		};
+		// 	} {
+		// 		stream << "<div id='filename'>Location: <b>NOT INSTALLED!</b></div>\n";
+		// 	};
+		// };
 
-		if(doc.isClassDoc) {
-			if(currentClass.notNil) {
-				m = currentClass.filenameSymbol.asString;
-				stream << "<div id='filename'>Source: "
-				<< "<a href='%' title='%'>".format(URI.fromLocalPath(m).asString, m)
-				<< m.basename << "</a></div>";
-				if(currentClass.subclasses.notNil) {
-					z = false;
-					stream << "<div id='subclasses'>"
-					<< "Subclasses: "
-					<< (currentClass.subclasses.collect(_.name).sort.collect {|c,i|
-						if(i==4,{z=true;"<span id='hiddensubclasses' style='display:none;'>"},{""})
-						++"<a href=\"../Classes/"++c++".html\">"++c++"</a>"
-					}.join(", "));
-					if(z) {
-						stream << "</span><a class='subclass_toggle' href='#' onclick='javascript:showAllSubclasses(this); return false'>&hellip;&nbsp;see&nbsp;all</a>";
-					};
-					stream << "</div>\n";
-				};
-				if(currentImplClass.notNil) {
-					stream << "<div class='inheritance'>Implementing class: "
-					<< "<a href=\"../Classes/" << currentImplClass.name << ".html\">"
-					<< currentImplClass.name << "</a></div>\n";
-				};
-			} {
-				stream << "<div id='filename'>Location: <b>NOT INSTALLED!</b></div>\n";
-			};
-		};
+		// doc.related !? {
+		// 	stream << "<div id='related'>See also: "
+		// 	<< (doc.related.collect {|r| this.htmlForLink(r)}.join(", "))
+		// 	<< "</div>\n";
+		// };
 
-		doc.related !? {
-			stream << "<div id='related'>See also: "
-			<< (doc.related.collect {|r| this.htmlForLink(r)}.join(", "))
-			<< "</div>\n";
-		};
+		// // FIXME: Remove this when conversion to new help system is done!
+		// if(doc.isUndocumentedClass and: {Help.respondsTo('findHelpFile')}) {
+		// 	x = Help.findHelpFile(name);
+		// 	x !? {
+		// 		stream << ("[ <a href='" ++ baseDir ++ "/OldHelpWrapper.html#"
+		// 		++x++"?"++SCDoc.helpTargetDir +/+ doc.path ++ ".html"
+		// 		++"'>old help</a> ]")
+		// 	};
+		// };
 
-		// FIXME: Remove this when conversion to new help system is done!
-		if(doc.isUndocumentedClass and: {Help.respondsTo('findHelpFile')}) {
-			x = Help.findHelpFile(name);
-			x !? {
-				stream << ("[ <a href='" ++ baseDir ++ "/OldHelpWrapper.html#"
-				++x++"?"++SCDoc.helpTargetDir +/+ doc.path ++ ".html"
-				++"'>old help</a> ]")
-			};
-		};
-
-		stream << "</div>\n";
+		// stream << "</div>\n";
+        stream << "\n";
 	}
 
 	*renderChildren {|stream, node|
@@ -429,11 +414,10 @@ SCDocVimRenderer {
 			};
 
 			x = {
-				stream << "<h3 class='method-code'>"
-				<< "<span class='method-prefix'>" << methodCodePrefix << "</span>"
-				<< "<a class='method-name' name='" << methodTypeIndicator << mname << "' href='"
-				<< baseDir << "/Overviews/Methods.html#"
-				<< mname2 << "'>" << mname2 << "</a>"
+				stream << methodCodePrefix
+				<< " " << methodTypeIndicator << mname << " "
+				// << baseDir << "/Overviews/Methods.html#"
+				// << mname2 << "'>" << mname2 << "</a>"
 			};
 
 			switch (mstat,
@@ -450,33 +434,33 @@ SCDocVimRenderer {
 				}
 			);
 
-			stream << "</h3>\n";
+			stream << "\n";
 
 			// has setter
 			if(mstat & 2 > 0) {
 				x.value;
 				if(args2.size<2) {
-					stream << " = " << args << "</h3>\n";
+					stream << " = " << args << "\n";
 				} {
-					stream << "_(" << args << ")</h3>\n";
+					stream << "_(" << args << ")\n";
 				}
 			};
 
 			m = m ?? m2;
 			m !? {
 				if(m.isExtensionOf(cls) and: {icls.isNil or: {m.isExtensionOf(icls)}}) {
-					stream << "<div class='extmethod'>From extension in <a href='"
-					<< URI.fromLocalPath(m.filenameSymbol.asString).asString << "'>"
-					<< m.filenameSymbol << "</a></div>\n";
+					stream << "\nFrom extension in "
+					<< URI.fromLocalPath(m.filenameSymbol.asString).asString
+					<< m.filenameSymbol << "\n";
 				} {
 					if(m.ownerClass == icls) {
-						stream << "<div class='supmethod'>From implementing class</div>\n";
+						stream << "\nFrom implementing class\n";
 					} {
 						if(m.ownerClass != cls) {
 							m = m.ownerClass.name;
 							m = if(m.isMetaClassName) {m.asString.drop(5)} {m};
-							stream << "<div class='supmethod'>From superclass: <a href='"
-							<< baseDir << "/Classes/" << m << ".html'>" << m << "</a></div>\n";
+							stream << "\nFrom superclass: "
+							<< baseDir << "/Classes/" << m << ".txt'>" << m << "\n";
 						}
 					}
 				};
@@ -502,9 +486,9 @@ SCDocVimRenderer {
 		};
 
 		if(node.children.size > 1) {
-			stream << "<div class='method'>";
+			stream << "\n";
 			this.renderChildren(stream, node.children[1]);
-			stream << "</div>";
+			stream << "\n";
 		};
 		currentMethod = nil;
 	}
@@ -516,7 +500,7 @@ SCDocVimRenderer {
 				if(noParBreak) {
 					noParBreak = false;
 				} {
-					stream << "\n<p>";
+					stream << "\n";
 				};
 				this.renderChildren(stream, node);
 			},
@@ -529,72 +513,70 @@ SCDocVimRenderer {
 				stream << this.htmlForLink(node.text);
 			},
 			\CODEBLOCK, {
-				stream << "<pre class='code prettyprint lang-sc'>"
-				<< this.escapeSpecialChars(node.text)
-				<< "</pre>\n";
+				stream << this.escapeSpecialChars(node.text);
 			},
 			\CODE, {
-				stream << "<code class='code prettyprint lang-sc'>"
-				<< this.escapeSpecialChars(node.text)
-				<< "</code>";
+				stream << this.escapeSpecialChars(node.text);
 			},
 			\EMPHASIS, {
-				stream << "<em>" << this.escapeSpecialChars(node.text) << "</em>";
+				stream << this.escapeSpecialChars(node.text);
 			},
 			\TELETYPEBLOCK, {
-				stream << "<pre>" << this.escapeSpecialChars(node.text) << "</pre>";
+				stream << this.escapeSpecialChars(node.text);
 			},
 			\TELETYPE, {
-				stream << "<code>" << this.escapeSpecialChars(node.text) << "</code>";
+				stream << this.escapeSpecialChars(node.text);
 			},
 			\STRONG, {
-				stream << "<strong>" << this.escapeSpecialChars(node.text) << "</strong>";
+				stream << this.escapeSpecialChars(node.text);
 			},
 			\SOFT, {
-				stream << "<span class='soft'>" << this.escapeSpecialChars(node.text) << "</span>";
+				stream << this.escapeSpecialChars(node.text);
 			},
 			\ANCHOR, {
-				stream << "<a class='anchor' name='" << this.escapeSpacesInAnchor(node.text) << "'>&nbsp;</a>";
+				stream << node.text;
 			},
 			\KEYWORD, {
 				node.children.do {|child|
-					stream << "<a class='anchor' name='kw_" << this.escapeSpacesInAnchor(child.text) << "'>&nbsp;</a>";
+					// stream << "<a class='anchor' name='kw_" << this.escapeSpacesInAnchor(child.text) << "'>&nbsp;</a>";
+                    stream << child.text << " ";
 				}
 			},
 			\IMAGE, {
-				f = node.text.split($#);
-				stream << "<div class='image'>";
-				img = "<img src='" ++ f[0] ++ "'/>";
-				if(f[2].isNil) {
-					stream << img;
-				} {
-					stream << this.htmlForLink(f[2]++"#"++(f[3]?"")++"#"++img,false);
-				};
-				f[1] !? { stream << "<br><b>" << f[1] << "</b>" }; // ugly..
-				stream << "</div>\n";
+				// f = node.text.split($#);
+				// stream << "<div class='image'>";
+				// img = "<img src='" ++ f[0] ++ "'/>";
+				// if(f[2].isNil) {
+				// 	stream << img;
+				// } {
+				// 	stream << this.htmlForLink(f[2]++"#"++(f[3]?"")++"#"++img,false);
+				// };
+				// f[1] !? { stream << "<br><b>" << f[1] << "</b>" }; // ugly..
+				// stream << "</div>\n";
 			},
 // Other stuff
 			\NOTE, {
-				stream << "<div class='note'><span class='notelabel'>NOTE:</span> ";
+				stream << "NOTE: ";
 				noParBreak = true;
 				this.renderChildren(stream, node);
-				stream << "</div>";
+				stream << "\n";
 			},
 			\WARNING, {
-				stream << "<div class='warning'><span class='warninglabel'>WARNING:</span> ";
+				stream << "WARNING: ";
 				noParBreak = true;
 				this.renderChildren(stream, node);
-				stream << "</div>";
+				stream << "\n";
 			},
 			\FOOTNOTE, {
 				footNotes = footNotes.add(node);
-				stream << "<a class='footnote anchor' name='footnote_org_"
-				<< footNotes.size
-				<< "' href='#footnote_"
-				<< footNotes.size
-				<< "'><sup>"
-				<< footNotes.size
-				<< "</sup></a> ";
+                stream << footNotes.size;
+				// stream << "<a class='footnote anchor' name='footnote_org_"
+				// << footNotes.size
+				// << "' href='#footnote_"
+				// << footNotes.size
+				// << "'><sup>"
+				// << footNotes.size
+				// << "</sup></a> ";
 			},
 			\CLASSTREE, {
 				stream << "<ul class='tree'>";
@@ -686,7 +668,7 @@ SCDocVimRenderer {
 			\CCOPYMETHOD, {},
 			\ICOPYMETHOD, {},
 			\ARGUMENTS, {
-				stream << "<h4>Arguments:</h4>\n<table class='arguments'>\n";
+				stream << "ARGUMENTS\n\n";
 				currArg = 0;
 				if(currentMethod.notNil and: {node.children.size < (currentNArgs-1)}) {
 					"SCDoc: In %\n"
@@ -699,11 +681,10 @@ SCDocVimRenderer {
 					).warn;
 				};
 				this.renderChildren(stream, node);
-				stream << "</table>";
 			},
 			\ARGUMENT, {
 				currArg = currArg + 1;
-				stream << "<tr><td class='argumentname'>";
+                stream << "\n";
 				if(node.text.isNil) {
 					currentMethod !? {
 						if(currentMethod.varArgs and: {currArg==(currentMethod.argNames.size-1)}) {
@@ -747,38 +728,38 @@ SCDocVimRenderer {
 						"("++node.text++")" // excessive arg
 					};
 				};
-				stream << "<td class='argumentdesc'>";
+				stream << " - ";
 				this.renderChildren(stream, node);
 			},
 			\RETURNS, {
-				stream << "<h4>Returns:</h4>\n<div class='returnvalue'>";
+				stream << "\nRETURNS\n\n";
 				this.renderChildren(stream, node);
-				stream << "</div>";
+				stream << "\n";
 
 			},
 			\DISCUSSION, {
-				stream << "<h4>Discussion:</h4>\n";
+				stream << "\nDISCUSSION\n\n";
 				this.renderChildren(stream, node);
 			},
 // Sections
 			\CLASSMETHODS, {
 				if(node.notPrivOnly) {
-					stream << "<h2><a class='anchor' name='classmethods'>Class Methods</a></h2>\n";
+					stream << "\nCLASS METHODS\n\n";
 				};
 				this.renderChildren(stream, node);
 			},
 			\INSTANCEMETHODS, {
 				if(node.notPrivOnly) {
-					stream << "<h2><a class='anchor' name='instancemethods'>Instance Methods</a></h2>\n";
+					stream << "\nINSTANCE METHODS\n\n";
 				};
 				this.renderChildren(stream, node);
 			},
 			\DESCRIPTION, {
-				stream << "<h2><a class='anchor' name='description'>Description</a></h2>\n";
+				stream << "DESCRIPTION\n";
 				this.renderChildren(stream, node);
 			},
 			\EXAMPLES, {
-				stream << "<h2><a class='anchor' name='examples'>Examples</a></h2>\n";
+				stream << "\nEXAMPLES\n\n";
 				this.renderChildren(stream, node);
 			},
 			\SECTION, {
@@ -793,12 +774,12 @@ SCDocVimRenderer {
 				};
 			},
 			\SUBSECTION, {
-				stream << "<h3><a class='anchor' name='" << this.escapeSpacesInAnchor(node.text)
-				<< "'>" << this.escapeSpecialChars(node.text) << "</a></h3>\n";
+				stream << this.escapeSpacesInAnchor(node.text)
+				<< this.escapeSpecialChars(node.text) << "\n";
 				if(node.makeDiv.isNil) {
 					this.renderChildren(stream, node);
 				} {
-					stream << "<div id='" << node.makeDiv << "'>";
+					stream << "\n" << node.makeDiv << "";
 					this.renderChildren(stream, node);
 					stream << "</div>";
 				};
@@ -927,14 +908,11 @@ SCDocVimRenderer {
 	}
 
 	*renderFooter {|stream, doc|
-		stream << "<div class='doclink'>";
-		doc.fullPath !? {
-			stream << "helpfile source: <a href='" << URI.fromLocalPath(doc.fullPath).asString << "'>"
-			<< doc.fullPath << "</a><br>"
-		};
-		stream << "link::" << doc.path << "::<br>"
-		<< "</div>"
-		<< "</div></body></html>";
+		// doc.fullPath !? {
+		// 	stream << "helpfile source:" << URI.fromLocalPath(doc.fullPath).asString
+		// 	<< doc.fullPath << "\n"
+		// }
+		stream << "\n vim:tw=78:et:ft=help:norl:";
 	}
 
 	*renderOnStream {|stream, doc, root|
@@ -948,8 +926,9 @@ SCDocVimRenderer {
 			currentClass = doc.klass;
 			currentImplClass = doc.implKlass;
 			if(currentClass != Object) {
-				body.addDivAfter(\CLASSMETHODS,"inheritedclassmets","Inherited class methods");
-				body.addDivAfter(\INSTANCEMETHODS,"inheritedinstmets","Inherited instance methods");
+                // TODO: override addDivAfter
+				// body.addDivAfter(\CLASSMETHODS,"inheritedclassmets","Inherited class methods");
+				// body.addDivAfter(\INSTANCEMETHODS,"inheritedinstmets","Inherited instance methods");
 			};
 			this.addUndocumentedMethods(doc.undoccmethods, body, \CMETHOD, \CLASSMETHODS, "Undocumented class methods");
 			this.addUndocumentedMethods(doc.undocimethods, body, \IMETHOD, \INSTANCEMETHODS, "Undocumented instance methods");
@@ -961,7 +940,7 @@ SCDocVimRenderer {
 
 		this.renderHeader(stream, doc, body);
 		this.renderChildren(stream, body);
-		this.renderFootNotes(stream);
+		// this.renderFootNotes(stream);
 		this.renderFooter(stream, doc);
 		currDoc = nil;
 	}
