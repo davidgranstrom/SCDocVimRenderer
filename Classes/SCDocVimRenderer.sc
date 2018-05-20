@@ -40,12 +40,12 @@ SCDocVimRenderer {
 
 			// If this is an existing document, just add .html to get the target
 			if(doc.notNil) {
-				result = result ++ ".html"
+				result = result ++ ".txt"
 			} {
 				// If the document doesn't exist according to SCDoc, check the filesystem
 				// to see if the link target is present
-				if(File.exists(SCDoc.helpTargetDir +/+ linkBase ++ ".html")) {
-					result = result ++ ".html"
+				if(File.exists(SCDoc.helpTargetDir +/+ linkBase ++ ".txt")) {
+					result = result ++ ".txt"
 				} {
 					// If the link target doesn't exist as an HTML file, check to see if the
 					// raw filepath exists. If it does, do nothing with it -- we're done. If
@@ -881,7 +881,7 @@ SCDocVimRenderer {
 		doc = SCDoc.documents["Classes/"++name];
 		doc !? { desc = " - "++doc.summary };
 		if(cls.name.isMetaClassName, {^this});
-		stream << "<li> <a href='" << baseDir << "/Classes/" << name << ".html'>"
+		stream << "<li> <a href='" << baseDir << "/Classes/" << name << ".txt'>"
 		<< name << "</a>" << desc << "\n";
 
 		cls.subclasses !? {
