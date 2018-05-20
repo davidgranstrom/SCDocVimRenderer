@@ -9,23 +9,25 @@ SCDocVimRenderer {
 	classvar baseDir;
 
 	*escapeSpecialChars {|str|
-		var x = "";
-		var beg = -1, end = 0;
-		str.do {|chr, i|
-			switch(chr,
-				$&, { x = x ++ str.copyRange(beg, i-1) ++ "&amp;"; beg = i+1; },
-				$<, { x = x ++ str.copyRange(beg, i-1) ++ "&lt;"; beg = i+1; },
-				$>, { x = x ++ str.copyRange(beg, i-1) ++ "&gt;"; beg = i+1; },
-				{ end = i }
-			);
-		};
-		if(beg<=end) {
-			x = x ++ str[beg..end];
-		};
-		^x;
+        ^str;
+		// var x = "";
+		// var beg = -1, end = 0;
+		// str.do {|chr, i|
+		// 	switch(chr,
+		// 		$&, { x = x ++ str.copyRange(beg, i-1) ++ "&amp;"; beg = i+1; },
+		// 		$<, { x = x ++ str.copyRange(beg, i-1) ++ "&lt;"; beg = i+1; },
+		// 		$>, { x = x ++ str.copyRange(beg, i-1) ++ "&gt;"; beg = i+1; },
+		// 		{ end = i }
+		// 	);
+		// };
+		// if(beg<=end) {
+		// 	x = x ++ str[beg..end];
+		// };
+		// ^x;
 	}
 	*escapeSpacesInAnchor { |str|
-		^str.replace(" ", "%20")
+        ^str;
+		// ^str.replace(" ", "%20")
 	}
 
 	// Find the target (what goes after href=) for a link that stays inside the hlp system
@@ -115,37 +117,40 @@ SCDocVimRenderer {
 	//   "#Key actions"
 	//   "http://qt-project.org/doc/qt-4.8/qt.html#Key-enum"
 	*htmlForLink { |link, escape = true|
-		var linkBase, linkAnchor, linkText, linkTarget;
-		// FIXME: how slow is this? can we optimize
+        ^"|%|".format(link);
+        // ^"|%|".format(link.replace("Classes\/", ""));
 
-		// Get the link base, anchor, and text from the original string
-		// Replace them with empty strings if any are nil
-		#linkBase, linkAnchor, linkText = link.split($#);
-		linkBase = linkBase ? "";
-		linkAnchor = linkAnchor ? "";
-		linkText = linkText ? "";
+		// var linkBase, linkAnchor, linkText, linkTarget;
+		// // FIXME: how slow is this? can we optimize
 
-		// Check whether the link is a URL or a relative path (starts with a `/`),
-		// NOTE: the second condition is not triggered by anything in the core library's
-		// help system. I am not sure if it is safe to remove. - Brian H
-		if("^[a-zA-Z]+://.+".matchRegexp(link) or: (link.first == $/)) {
-			// Process a link that goes to a URL outside the help system
+		// // Get the link base, anchor, and text from the original string
+		// // Replace them with empty strings if any are nil
+		// #linkBase, linkAnchor, linkText = link.split($#);
+		// linkBase = linkBase ? "";
+		// linkAnchor = linkAnchor ? "";
+		// linkText = linkText ? "";
 
-			// If there was no link text, set it to be the same as the original link
-			linkText = if(linkText.isEmpty) { link } { linkText };
-			linkTarget = this.prLinkTargetForExternalLink(linkBase, linkAnchor);
-		} {
-		    // Process a link that goes to a URL within the help system
-			linkText = this.prLinkTextForInternalLink(linkBase, linkAnchor, linkText);
-			linkTarget = this.prLinkTargetForInternalLink(linkBase, linkAnchor, link);
-		};
+		// // Check whether the link is a URL or a relative path (starts with a `/`),
+		// // NOTE: the second condition is not triggered by anything in the core library's
+		// // help system. I am not sure if it is safe to remove. - Brian H
+		// if("^[a-zA-Z]+://.+".matchRegexp(link) or: (link.first == $/)) {
+		// 	// Process a link that goes to a URL outside the help system
 
-		// Escape special characters in the link text if requested
-		if(escape) { linkText = this.escapeSpecialChars(linkText) };
+		// 	// If there was no link text, set it to be the same as the original link
+		// 	linkText = if(linkText.isEmpty) { link } { linkText };
+		// 	linkTarget = this.prLinkTargetForExternalLink(linkBase, linkAnchor);
+		// } {
+		//     // Process a link that goes to a URL within the help system
+		// 	linkText = this.prLinkTextForInternalLink(linkBase, linkAnchor, linkText);
+		// 	linkTarget = this.prLinkTargetForInternalLink(linkBase, linkAnchor, link);
+		// };
 
-		// Return a well-formatted <a> tag using the target and link text
-		// ^"<a href=\"" ++ linkTarget ++ "\">" ++ linkText ++ "</a>";
-		^"|" ++ linkText ++ "|";
+		// // Escape special characters in the link text if requested
+		// if(escape) { linkText = this.escapeSpecialChars(linkText) };
+
+		// // Return a well-formatted <a> tag using the target and link text
+		// // ^"<a href=\"" ++ linkTarget ++ "\">" ++ linkText ++ "</a>";
+		// ^"|" ++ linkText ++ "|";
 	}
 
 	*makeArgString {|m, par=true|
@@ -165,7 +170,7 @@ SCDocVimRenderer {
 						res = res ++ ": " ++ value;
 					};
 				};
-				res = res ++ " ";
+				res = res ++ "";
 			};
 		};
 		if (res.notEmpty and: par) {
@@ -198,7 +203,7 @@ SCDocVimRenderer {
 		if(thisIsTheMainHelpFile) {
 			stream << "SuperCollider " << Main.version << " Help";
 		} {
-			stream << " | SuperCollider " << Main.version << " | Help";
+			stream << "| SuperCollider " << Main.version << " | Help";
 		};
 
 		stream
@@ -362,7 +367,7 @@ SCDocVimRenderer {
 		names.do {|mname|
 			methodCodePrefix = switch(
 				methodType,
-				\classMethod, { if(cls.notNil) { cls.name.asString[5..] } { "" } ++ "." },
+				\classMethod, { if(cls.notNil) { cls.name.asString[5..] } { "" } ++ "" },
 				\instanceMethod, {
 					// If the method name contains any valid binary operator character, remove the
 					// "." to reduce confusion.
@@ -415,7 +420,7 @@ SCDocVimRenderer {
 
 			x = {
 				stream << methodCodePrefix
-				<< " " << methodTypeIndicator << mname << " "
+				<< " " << methodTypeIndicator << mname << ""
 				// << baseDir << "/Overviews/Methods.html#"
 				// << mname2 << "'>" << mname2 << "</a>"
 			};
@@ -556,10 +561,10 @@ SCDocVimRenderer {
 			},
 // Other stuff
 			\NOTE, {
-				stream << "NOTE: ";
+				stream << "\n\tNOTE: ";
 				noParBreak = true;
 				this.renderChildren(stream, node);
-				stream << "\n";
+				// stream << "\n";
 			},
 			\WARNING, {
 				stream << "WARNING: ";
@@ -579,62 +584,62 @@ SCDocVimRenderer {
 				// << "</sup></a> ";
 			},
 			\CLASSTREE, {
-				stream << "<ul class='tree'>";
+				// stream << "<ul class='tree'>";
 				this.renderClassTree(stream, node.text.asSymbol.asClass);
-				stream << "</ul>";
+				// stream << "</ul>";
 			},
 // Lists and tree
 			\LIST, {
-				stream << "<ul>\n";
+				// stream << "<ul>\n";
 				this.renderChildren(stream, node);
-				stream << "</ul>\n";
+				// stream << "</ul>\n";
 			},
 			\TREE, {
-				stream << "<ul class='tree'>\n";
+				// stream << "<ul class='tree'>\n";
 				this.renderChildren(stream, node);
-				stream << "</ul>\n";
+				// stream << "</ul>\n";
 			},
 			\NUMBEREDLIST, {
-				stream << "<ol>\n";
+				// stream << "<ol>\n";
 				this.renderChildren(stream, node);
-				stream << "</ol>\n";
+				// stream << "</ol>\n";
 			},
 			\ITEM, { // for LIST, TREE and NUMBEREDLIST
-				stream << "<li>";
+				// stream << "<li>";
 				noParBreak = true;
 				this.renderChildren(stream, node);
 			},
 // Definitionlist
 			\DEFINITIONLIST, {
-				stream << "<dl>\n";
+				// stream << "<dl>\n";
 				this.renderChildren(stream, node);
-				stream << "</dl>\n";
+				// stream << "</dl>\n";
 			},
 			\DEFLISTITEM, {
 				this.renderChildren(stream, node);
 			},
 			\TERM, {
-				stream << "<dt>";
+				// stream << "<dt>";
 				noParBreak = true;
 				this.renderChildren(stream, node);
 			},
 			\DEFINITION, {
-				stream << "<dd>";
+				// stream << "<dd>";
 				noParBreak = true;
 				this.renderChildren(stream, node);
 			},
 // Tables
 			\TABLE, {
-				stream << "<table>\n";
+				// stream << "<table>\n";
 				this.renderChildren(stream, node);
-				stream << "</table>\n";
+				// stream << "</table>\n";
 			},
 			\TABROW, {
-				stream << "<tr>";
+				// stream << "<tr>";
 				this.renderChildren(stream, node);
 			},
 			\TABCOL, {
-				stream << "<td>";
+				// stream << "<td>";
 				noParBreak = true;
 				this.renderChildren(stream, node);
 			},
@@ -668,7 +673,7 @@ SCDocVimRenderer {
 			\CCOPYMETHOD, {},
 			\ICOPYMETHOD, {},
 			\ARGUMENTS, {
-				stream << "ARGUMENTS\n\n";
+				stream << "ARGUMENTS~";
 				currArg = 0;
 				if(currentMethod.notNil and: {node.children.size < (currentNArgs-1)}) {
 					"SCDoc: In %\n"
@@ -680,11 +685,15 @@ SCDocVimRenderer {
 						node.children.size,
 					).warn;
 				};
+                stream << "\n>";
 				this.renderChildren(stream, node);
+                stream << "\n<";
 			},
 			\ARGUMENT, {
 				currArg = currArg + 1;
+				noParBreak = true;
                 stream << "\n";
+                stream << "\t";
 				if(node.text.isNil) {
 					currentMethod !? {
 						if(currentMethod.varArgs and: {currArg==(currentMethod.argNames.size-1)}) {
@@ -738,39 +747,39 @@ SCDocVimRenderer {
 
 			},
 			\DISCUSSION, {
-				stream << "\nDISCUSSION\n\n";
+				stream << "\nDISCUSSION~\n\n";
 				this.renderChildren(stream, node);
 			},
 // Sections
 			\CLASSMETHODS, {
 				if(node.notPrivOnly) {
-					stream << "\nCLASS METHODS\n\n";
+					stream << "\nCLASS METHODS~\n\n";
 				};
 				this.renderChildren(stream, node);
 			},
 			\INSTANCEMETHODS, {
 				if(node.notPrivOnly) {
-					stream << "\nINSTANCE METHODS\n\n";
+					stream << "\nINSTANCE METHODS~\n\n";
 				};
 				this.renderChildren(stream, node);
 			},
 			\DESCRIPTION, {
-				stream << "DESCRIPTION\n";
+				stream << "DESCRIPTION~\n";
 				this.renderChildren(stream, node);
 			},
 			\EXAMPLES, {
-				stream << "\nEXAMPLES\n\n";
+				stream << "\nEXAMPLES~\n\n";
 				this.renderChildren(stream, node);
 			},
 			\SECTION, {
-				stream << "<h2><a class='anchor' name='" << this.escapeSpacesInAnchor(node.text)
-				<< "'>" << this.escapeSpecialChars(node.text) << "</a></h2>\n";
+				stream << node.text
+				<< this.escapeSpecialChars(node.text) << "\n";
 				if(node.makeDiv.isNil) {
 					this.renderChildren(stream, node);
 				} {
-					stream << "<div id='" << node.makeDiv << "'>";
+					stream << node.makeDiv << "\n";
 					this.renderChildren(stream, node);
-					stream << "</div>";
+					stream << "\n";
 				};
 			},
 			\SUBSECTION, {
@@ -779,9 +788,9 @@ SCDocVimRenderer {
 				if(node.makeDiv.isNil) {
 					this.renderChildren(stream, node);
 				} {
-					stream << "\n" << node.makeDiv << "";
+					stream << node.makeDiv << "\n";
 					this.renderChildren(stream, node);
-					stream << "</div>";
+					stream << "\n";
 				};
 			},
 			{
