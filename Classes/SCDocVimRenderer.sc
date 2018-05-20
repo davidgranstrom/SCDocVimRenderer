@@ -590,9 +590,9 @@ SCDocVimRenderer {
 			},
 // Lists and tree
 			\LIST, {
-				// stream << "<ul>\n";
+				stream << "\n\n";
 				this.renderChildren(stream, node);
-				// stream << "</ul>\n";
+				stream << "\n\n";
 			},
 			\TREE, {
 				// stream << "<ul class='tree'>\n";
@@ -783,8 +783,7 @@ SCDocVimRenderer {
 				};
 			},
 			\SUBSECTION, {
-				stream << this.escapeSpacesInAnchor(node.text)
-				<< this.escapeSpecialChars(node.text) << "\n";
+				stream << "\n\n" << this.escapeSpecialChars(node.text) << "\n\n";
 				if(node.makeDiv.isNil) {
 					this.renderChildren(stream, node);
 				} {
