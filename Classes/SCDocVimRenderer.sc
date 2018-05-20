@@ -321,11 +321,11 @@ SCDocVimRenderer {
 		// 	};
 		// };
 
-		// doc.related !? {
-		// 	stream << "<div id='related'>See also: "
-		// 	<< (doc.related.collect {|r| this.htmlForLink(r)}.join(", "))
-		// 	<< "</div>\n";
-		// };
+		doc.related !? {
+			stream << "\nSee also: "
+			<< (doc.related.collect {|r| this.htmlForLink(r)}.join(" "))
+			<< "\n";
+		};
 
 		// // FIXME: Remove this when conversion to new help system is done!
 		// if(doc.isUndocumentedClass and: {Help.respondsTo('findHelpFile')}) {
