@@ -117,7 +117,7 @@ SCDocVimRenderer {
 	//   "#Key actions"
 	//   "http://qt-project.org/doc/qt-4.8/qt.html#Key-enum"
 	*htmlForLink { |link, escape = true|
-        ^"|%|".format(link);
+        ^"|%|".format(link.split($/)[1]);
         // ^"|%|".format(link.replace("Classes\/", ""));
 
 		// var linkBase, linkAnchor, linkText, linkTarget;
@@ -512,22 +512,24 @@ SCDocVimRenderer {
 			\NL, { }, // these shouldn't be here..
 // Plain text and modal tags
 			\TEXT, {
+                // noParBreak = true;
 				stream << this.escapeSpecialChars(node.text);
 			},
 			\LINK, {
 				stream << this.htmlForLink(node.text);
 			},
 			\CODEBLOCK, {
-				stream << this.escapeSpecialChars(node.text);
+                noParBreak = true;
+                stream << "\n>\n\t" << this.escapeSpecialChars(node.text) << "\n<\n";
 			},
 			\CODE, {
-				stream << this.escapeSpecialChars(node.text);
+				stream << "`" << this.escapeSpecialChars(node.text) << "`"
 			},
 			\EMPHASIS, {
-				stream << this.escapeSpecialChars(node.text);
+				stream << "'" << this.escapeSpecialChars(node.text) << "'"
 			},
 			\TELETYPEBLOCK, {
-				stream << this.escapeSpecialChars(node.text);
+				stream << "`" << this.escapeSpecialChars(node.text) << "`"
 			},
 			\TELETYPE, {
 				stream << this.escapeSpecialChars(node.text);
@@ -561,7 +563,7 @@ SCDocVimRenderer {
 			},
 // Other stuff
 			\NOTE, {
-				stream << "\n\tNOTE: ";
+				stream << "\nNOTE: ";
 				noParBreak = true;
 				this.renderChildren(stream, node);
 				// stream << "\n";
@@ -590,24 +592,28 @@ SCDocVimRenderer {
 			},
 // Lists and tree
 			\LIST, {
-				stream << "\n\n";
+				// stream << "\n\n";
 				this.renderChildren(stream, node);
-				stream << "\n\n";
+				// stream << "\n\n";
 			},
 			\TREE, {
 				// stream << "<ul class='tree'>\n";
+				stream << "\n\n";
 				this.renderChildren(stream, node);
+				stream << "\n\n";
 				// stream << "</ul>\n";
 			},
 			\NUMBEREDLIST, {
 				// stream << "<ol>\n";
+				stream << "\n\n";
 				this.renderChildren(stream, node);
+				stream << "\n\n";
 				// stream << "</ol>\n";
 			},
 			\ITEM, { // for LIST, TREE and NUMBEREDLIST
-				// stream << "<li>";
 				noParBreak = true;
 				this.renderChildren(stream, node);
+				stream << "\n";
 			},
 // Definitionlist
 			\DEFINITIONLIST, {
@@ -685,15 +691,17 @@ SCDocVimRenderer {
 						node.children.size,
 					).warn;
 				};
-                stream << "\n>";
+                // stream << "\n>";
+                stream << "\n";
 				this.renderChildren(stream, node);
-                stream << "\n<";
+                // stream << "\n<";
+                stream << "\n";
 			},
 			\ARGUMENT, {
 				currArg = currArg + 1;
 				noParBreak = true;
-                stream << "\n";
-                stream << "\t";
+                stream << "\n'";
+                // stream << "\t";
 				if(node.text.isNil) {
 					currentMethod !? {
 						if(currentMethod.varArgs and: {currArg==(currentMethod.argNames.size-1)}) {
@@ -737,11 +745,11 @@ SCDocVimRenderer {
 						"("++node.text++")" // excessive arg
 					};
 				};
-				stream << " - ";
+				stream << "' - ";
 				this.renderChildren(stream, node);
 			},
 			\RETURNS, {
-				stream << "\nRETURNS\n\n";
+				stream << "\nRETURNS~\n\n";
 				this.renderChildren(stream, node);
 				stream << "\n";
 
@@ -753,7 +761,7 @@ SCDocVimRenderer {
 // Sections
 			\CLASSMETHODS, {
 				if(node.notPrivOnly) {
-					stream << "\nCLASS METHODS~\n\n";
+					stream << "\n\nCLASS METHODS~\n\n";
 				};
 				this.renderChildren(stream, node);
 			},
@@ -783,14 +791,15 @@ SCDocVimRenderer {
 				};
 			},
 			\SUBSECTION, {
-				stream << "\n\n" << this.escapeSpecialChars(node.text) << "\n\n";
-				if(node.makeDiv.isNil) {
-					this.renderChildren(stream, node);
-				} {
-					stream << node.makeDiv << "\n";
-					this.renderChildren(stream, node);
-					stream << "\n";
-				};
+				stream << "\n\n" << node.text << "~\n\n";
+                this.renderChildren(stream, node);
+				// if(node.makeDiv.isNil) {
+				// 	this.renderChildren(stream, node);
+				// } {
+				// 	stream << node.makeDiv << "\n";
+				// 	this.renderChildren(stream, node);
+				// 	stream << "\n";
+				// };
 			},
 			{
 				"SCDoc: In %\n"
@@ -920,7 +929,7 @@ SCDocVimRenderer {
 		// 	stream << "helpfile source:" << URI.fromLocalPath(doc.fullPath).asString
 		// 	<< doc.fullPath << "\n"
 		// }
-		stream << "\n vim:tw=78:et:ft=help:norl:";
+		stream << "\n\n vim:tw=78:et:ft=help:norl:\n";
 	}
 
 	*renderOnStream {|stream, doc, root|
