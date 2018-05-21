@@ -357,8 +357,8 @@ SCDocVimRenderer {
 
 		methodTypeIndicator = switch(
 			methodType,
-			\classMethod, { "*" },
-			\instanceMethod, { "-" },
+			\classMethod, { "* " },
+			\instanceMethod, { "- " },
 			\genericMethod, { "" }
 		);
 
@@ -419,8 +419,8 @@ SCDocVimRenderer {
 			};
 
 			x = {
-				stream << methodCodePrefix
-				<< " " << methodTypeIndicator << mname << ""
+				stream << "\n" << methodCodePrefix
+				<< methodTypeIndicator << "`" << mname << "`"
 				// << baseDir << "/Overviews/Methods.html#"
 				// << mname2 << "'>" << mname2 << "</a>"
 			};
@@ -465,7 +465,8 @@ SCDocVimRenderer {
 							m = m.ownerClass.name;
 							m = if(m.isMetaClassName) {m.asString.drop(5)} {m};
 							stream << "\nFrom superclass: "
-							<< baseDir << "/Classes/" << m << ".txt'>" << m << "\n";
+							// << baseDir << "/Classes/" << m << ".txt'>" << m << "\n";
+							<< "|" << m << "|" << "\n";
 						}
 					}
 				};
@@ -519,8 +520,10 @@ SCDocVimRenderer {
 				stream << this.htmlForLink(node.text);
 			},
 			\CODEBLOCK, {
-                noParBreak = true;
-                stream << "\n>\n\t" << this.escapeSpecialChars(node.text) << "\n<\n";
+                var code = node.text;
+                // indent code blocks so that vim hightlights them verbatim
+                code = code.split($\n).collect {|fragment| "    " ++ fragment ++ "\n" }.join;
+                stream << "\n>\n" << code << "\n<\n";
 			},
 			\CODE, {
 				stream << "`" << this.escapeSpecialChars(node.text) << "`"
