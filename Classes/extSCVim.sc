@@ -1,5 +1,5 @@
 + SCVim {
-    *openHelpFor {|text|
+    *prepareHelpFor {|text|
         var urlString = SCDoc.findHelpFile(text);
 		var url = URI(urlString);
         var brokenAction = {
