@@ -1,11 +1,25 @@
-+ SCVim {
++ SCNvim {
     *prepareHelpFor {|text|
-        var urlString = SCDoc.findHelpFile(text);
-		var url = URI(urlString);
-        var brokenAction = {
-            "Sorry no help for %".format(text).postln;
+        var urlString, url, brokenAction;
+
+        if (\SCDocVimRenderer.asClass.notNil
+            and:{SCDoc.renderer != \SCDocVimRenderer.asClass}) {
+            SCDoc.renderer = SCDocVimRenderer;
         };
 
-        SCDoc.prepareHelpForURL(url) ?? brokenAction;
+        urlString = SCDoc.findHelpFile(text);
+		url = URI(urlString);
+        brokenAction = {
+            "Sorry no help for %".format(text).postln;
+            ^nil;
+        };
+
+        ^SCDoc.prepareHelpForURL(url) ?? brokenAction;
+    }
+
+    *openHelpFor {|text, vimPort|
+        var uri = SCNvim.prepareHelpFor(text);
+        var msg = '{ "action": { "help": { "open": "%" } } }'.asString.format(uri.asLocalPath);
+        SCNvim.sendJSON(msg, vimPort);
     }
 }
