@@ -1,4 +1,14 @@
 + SCDoc {
+	*exportDocMap {|path|
+		var f = File.open(path,"w");
+		f << "{\n";
+		this.documents.do {|doc|
+			doc.toJSON(f);
+		};
+		f << "}\n";
+		f.close;
+	}
+
     *findHelpFile {|str|
         var old, sym, pfx = SCDoc.helpTargetUrl;
 
@@ -104,5 +114,70 @@
 + SCDocEntry {
 	destPath {
 		^SCDoc.helpTargetDir +/+ path ++ ".txt";
+	}
+
+	makeMethodList {
+		var list;
+		docimethods.do {|name|
+			list = list.add("-"++name.asString);
+		};
+		doccmethods.do {|name|
+			list = list.add("*"++name.asString);
+		};
+		undocimethods.do {|name|
+			list = list.add("?-"++name.asString);
+		};
+		undoccmethods.do {|name|
+			list = list.add("?*"++name.asString);
+		};
+		docmethods.do {|name|
+			list = list.add("."++name.asString);
+		};
+		^list;
+	}
+
+    // overriden to output valid json
+	prJSONString {|stream, key, x|
+		if(x.isNil) { x = "" };
+		stream << "\"" << key << "\": \"" << x.escapeChar(34.asAscii) << "\",\n";
+	}
+
+    // overriden to output valid json
+	prJSONList {|stream, key, v|
+		if (v.isNil) { v = "" };
+		stream << "\"" << key << "\": [ " << v.collect{|x|"\""++x.escapeChar(34.asAscii)++"\""}.join(",") << " ],\n";
+	}
+
+	toJSON {|stream|
+		stream << "\"" << path.escapeChar(34.asAscii) << "\": {\n";
+		this.prJSONString(stream, "title", title);
+		this.prJSONString(stream, "path", path);
+		this.prJSONString(stream, "summary", summary);
+		this.prJSONString(stream, "installed", if(isExtension,"extension","standard")); //FIXME: also 'missing'.. better to have separate extension and missing booleans..
+		this.prJSONString(stream, "categories",
+			if(categories.notNil) {categories.join(", ")} {""}); // FIXME: export list instead
+		this.prJSONList(stream, "keywords", keywords);
+		this.prJSONList(stream, "related", related);
+		this.prJSONList(stream, "methods", this.makeMethodList);
+		if(oldHelp.notNil) {
+			this.prJSONString(stream, "oldhelp", oldHelp);
+		};
+        // TODO: collect into array and adjust delimiter
+		if(klass.notNil) {
+			klass.superclasses !? {
+				this.prJSONList(stream, "superclasses", klass.superclasses.collect {|c|
+					c.name.asString
+				})
+			};
+			klass.subclasses !? {
+				this.prJSONList(stream, "subclasses", klass.subclasses.collect {|c|
+					c.name.asString
+				})
+			};
+			implKlass !? {
+				this.prJSONString(stream, "implementor", implKlass.name.asString);
+			}
+		};
+		stream << "},\n";
 	}
 }
