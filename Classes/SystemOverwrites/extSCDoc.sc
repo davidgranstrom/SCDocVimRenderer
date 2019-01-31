@@ -1,9 +1,11 @@
 + SCDoc {
 	*exportDocMap {|path|
 		var f = File.open(path,"w");
+        var numItems = this.documents.size - 1;
 		f << "{\n";
-		this.documents.do {|doc|
-			doc.toJSON(f);
+
+		this.documents.do {|doc, i|
+            doc.toJSON(f, i >= numItems);
 		};
 		f << "}\n";
 		f.close;
@@ -138,46 +140,60 @@
 
     // overriden to output valid json
 	prJSONString {|stream, key, x|
-		if(x.isNil) { x = "" };
+		if (x.isNil) { x = "" };
 		stream << "\"" << key << "\": \"" << x.escapeChar(34.asAscii) << "\",\n";
 	}
 
     // overriden to output valid json
-	prJSONList {|stream, key, v|
+	prJSONList {|stream, key, v, lastItem|
+        var delimiter = if(lastItem.notNil and:{lastItem}, "", ",");
 		if (v.isNil) { v = "" };
-		stream << "\"" << key << "\": [ " << v.collect{|x|"\""++x.escapeChar(34.asAscii)++"\""}.join(",") << " ],\n";
+		stream << "\"" << key << "\": [ " << v.collect{|x|"\""++x.escapeChar(34.asAscii)++"\""}.join(",") << " ]%\n".format(delimiter);
 	}
 
-	toJSON {|stream|
+	toJSON {|stream, lastItem|
+        var delimiter = if(lastItem.notNil and:{lastItem}, "", ",");
+        var inheritance = [];
+        var numItems;
+
 		stream << "\"" << path.escapeChar(34.asAscii) << "\": {\n";
+
 		this.prJSONString(stream, "title", title);
 		this.prJSONString(stream, "path", path);
 		this.prJSONString(stream, "summary", summary);
 		this.prJSONString(stream, "installed", if(isExtension,"extension","standard")); //FIXME: also 'missing'.. better to have separate extension and missing booleans..
-		this.prJSONString(stream, "categories",
-			if(categories.notNil) {categories.join(", ")} {""}); // FIXME: export list instead
+		this.prJSONString(stream, "categories", if(categories.notNil) {categories.join(", ")} {""}); // FIXME: export list instead
 		this.prJSONList(stream, "keywords", keywords);
 		this.prJSONList(stream, "related", related);
-		this.prJSONList(stream, "methods", this.makeMethodList);
-		if(oldHelp.notNil) {
+
+		this.prJSONList(stream, "methods", this.makeMethodList, klass.isNil);
+
+		if (oldHelp.notNil) {
 			this.prJSONString(stream, "oldhelp", oldHelp);
 		};
-        // TODO: collect into array and adjust delimiter
-		if(klass.notNil) {
+
+		if (klass.notNil) {
+            var keys = #[ "superclasses", "subclasses", "implementor" ];
 			klass.superclasses !? {
-				this.prJSONList(stream, "superclasses", klass.superclasses.collect {|c|
+                inheritance = inheritance.add(klass.superclasses.collect {|c|
 					c.name.asString
-				})
+				});
 			};
 			klass.subclasses !? {
-				this.prJSONList(stream, "subclasses", klass.subclasses.collect {|c|
+                inheritance = inheritance.add(klass.subclasses.collect {|c|
 					c.name.asString
-				})
+				});
 			};
 			implKlass !? {
-				this.prJSONString(stream, "implementor", implKlass.name.asString);
-			}
+                inheritance = inheritance.add(implKlass.name.asString);
+			};
+
+            numItems = inheritance.size - 1;
+            inheritance.do {|item, i|
+                this.prJSONList(stream, keys[i], item, i >= numItems);
+            };
 		};
-		stream << "},\n";
+
+		stream << "}%\n".format(delimiter);
 	}
 }
