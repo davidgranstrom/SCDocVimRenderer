@@ -18,8 +18,16 @@
     }
 
     *openHelpFor {|text, vimPort|
-        var uri = SCNvim.prepareHelpFor(text);
-        var msg = '{ "action": { "help": { "open": "%" } } }'.asString.format(uri.asLocalPath);
+        var msg, uri, path;
+        uri = SCNvim.prepareHelpFor(text);
+        path = uri.asLocalPath;
+        if (uri.notNil and:{path.notNil}) {
+            // help file
+            msg = '{ "action": { "help": { "open": "%" } } }'.asString.format(path);
+        } {
+            // search for method
+            msg = '{ "action": { "help": { "method": "%", "helpTargetDir": "%" } } }'.asString.format(uri.asString, SCDoc.helpTargetDir);
+        };
         SCNvim.sendJSON(msg, vimPort);
     }
 }

@@ -27,8 +27,7 @@
 		};
 
 		if(str.last == $_) { str = str.drop(-1) };
-		^pfx ++ if("^[a-z][a-zA-Z0-9_]*$|^[-<>@|&%*+/!?=]+$".matchRegexp(str))
-		{ "/Overviews/Methods.txt#" } { "/Search.txt#" } ++ str;
+        ^str;
 	}
 
 	*prepareHelpForURL {|url|
