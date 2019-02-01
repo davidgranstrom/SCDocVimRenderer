@@ -1,14 +1,28 @@
 + SCDoc {
-	*exportDocMap {|path|
-		var f = File.open(path,"w");
-		var numItems = this.documents.size - 1;
-		f << "{\n";
-
-		this.documents.do {|doc, i|
-			doc.toJSON(f, i >= numItems);
-		};
-		f << "}\n";
-		f.close;
+	*exportDocMapJS {|path|
+        var f, numItems;
+        if (\SCDocVimRenderer.asClass.notNil
+            and:{SCDoc.renderer == \SCDocVimRenderer.asClass})
+        {
+            path = SCDoc.helpTargetDir +/+ "docmap.json";
+            f = File.open(path,"w");
+            numItems = this.documents.size - 1;
+            f << "{\n";
+            this.documents.do {|doc, i|
+                doc.toJSON(f, i >= numItems);
+            };
+            f << "}\n";
+            f.close;
+        } {
+            // original method
+            f = File.open(path,"w");
+            f << "docmap = {\n";
+            this.documents.do {|doc|
+                doc.toJSON(f);
+            };
+            f << "}\n";
+            f.close;
+        };
 	}
 
 	*findHelpFile {|str|
