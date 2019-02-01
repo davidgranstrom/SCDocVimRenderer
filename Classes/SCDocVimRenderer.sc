@@ -928,11 +928,7 @@ SCDocVimRenderer {
 	}
 
 	*renderFooter {|stream, doc|
-		// doc.fullPath !? {
-		// 	stream << "helpfile source:" << URI.fromLocalPath(doc.fullPath).asString
-		// 	<< doc.fullPath << "\n"
-		// }
-		stream << "\n\n vim:tw=78:et:ft=help:norl:\n";
+		stream << "\n\n vim:tw=78:et:ft=help.supercollider:norl:\n";
 	}
 
 	*renderOnStream {|stream, doc, root|
