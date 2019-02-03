@@ -25,10 +25,31 @@ SCDocVimRenderer {
 		// };
 		// ^x;
 	}
+
 	*escapeSpacesInAnchor { |str|
         ^str;
 		// ^str.replace(" ", "%20")
 	}
+
+    *wrapString {|str, maxWidth=78|
+        var output = "";
+        var wrap = false;
+
+        str.size.do {|i|
+            var char = str[i];
+            if (((i+1) % 78) == 0) {
+                wrap = true;
+            };
+            if (wrap and:{char == Char.space}) {
+                output = output ++ "\n";
+                wrap = false;
+            } {
+                output = output ++ str[i];
+            }
+        };
+
+        ^output;
+    }
 
 	// Find the target (what goes after href=) for a link that stays inside the hlp system
 	*prLinkTargetForInternalLink { |linkBase, linkAnchor, originalLink|
@@ -514,7 +535,8 @@ SCDocVimRenderer {
 // Plain text and modal tags
 			\TEXT, {
                 // noParBreak = true;
-				stream << this.escapeSpecialChars(node.text);
+				// stream << this.escapeSpecialChars(node.text);
+				stream << this.wrapString(node.text, 78);
 			},
 			\LINK, {
 				stream << this.htmlForLink(node.text);
