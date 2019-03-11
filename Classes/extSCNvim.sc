@@ -7,14 +7,14 @@
             SCDoc.renderer = SCDocVimRenderer;
         };
 
-        urlString = SCDoc.findHelpFile(text);
+        urlString = SCNvimDoc.findHelpFile(text);
 		url = URI(urlString);
         brokenAction = {
             "Sorry no help for %".format(text).postln;
             ^nil;
         };
 
-        ^SCDoc.prepareHelpForURL(url) ?? brokenAction;
+        ^SCNvimDoc.prepareHelpForURL(url) ?? brokenAction;
     }
 
     *openHelpFor {|text, vimPort|
