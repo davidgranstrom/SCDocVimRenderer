@@ -8,29 +8,6 @@ SCDocVimRenderer {
 	classvar minArgs;
 	classvar baseDir;
 
-	*escapeSpecialChars {|str|
-        ^str;
-		// var x = "";
-		// var beg = -1, end = 0;
-		// str.do {|chr, i|
-		// 	switch(chr,
-		// 		$&, { x = x ++ str.copyRange(beg, i-1) ++ "&amp;"; beg = i+1; },
-		// 		$<, { x = x ++ str.copyRange(beg, i-1) ++ "&lt;"; beg = i+1; },
-		// 		$>, { x = x ++ str.copyRange(beg, i-1) ++ "&gt;"; beg = i+1; },
-		// 		{ end = i }
-		// 	);
-		// };
-		// if(beg<=end) {
-		// 	x = x ++ str[beg..end];
-		// };
-		// ^x;
-	}
-
-	*escapeSpacesInAnchor { |str|
-        ^str;
-		// ^str.replace(" ", "%20")
-	}
-
     *wrapString {|str, maxWidth=78|
         var output = "";
         var wrap = false;
@@ -50,6 +27,14 @@ SCDocVimRenderer {
 
         ^output;
     }
+
+	*escapeSpecialChars {|str|
+        ^str;
+	}
+
+	*escapeSpacesInAnchor { |str|
+        ^str;
+	}
 
 	// Find the target (what goes after href=) for a link that stays inside the hlp system
 	*prLinkTargetForInternalLink { |linkBase, linkAnchor, originalLink|
@@ -139,39 +124,6 @@ SCDocVimRenderer {
 	//   "http://qt-project.org/doc/qt-4.8/qt.html#Key-enum"
 	*htmlForLink { |link, escape = true|
         ^"|%|".format(link.split($/)[1]);
-        // ^"|%|".format(link.replace("Classes\/", ""));
-
-		// var linkBase, linkAnchor, linkText, linkTarget;
-		// // FIXME: how slow is this? can we optimize
-
-		// // Get the link base, anchor, and text from the original string
-		// // Replace them with empty strings if any are nil
-		// #linkBase, linkAnchor, linkText = link.split($#);
-		// linkBase = linkBase ? "";
-		// linkAnchor = linkAnchor ? "";
-		// linkText = linkText ? "";
-
-		// // Check whether the link is a URL or a relative path (starts with a `/`),
-		// // NOTE: the second condition is not triggered by anything in the core library's
-		// // help system. I am not sure if it is safe to remove. - Brian H
-		// if("^[a-zA-Z]+://.+".matchRegexp(link) or: (link.first == $/)) {
-		// 	// Process a link that goes to a URL outside the help system
-
-		// 	// If there was no link text, set it to be the same as the original link
-		// 	linkText = if(linkText.isEmpty) { link } { linkText };
-		// 	linkTarget = this.prLinkTargetForExternalLink(linkBase, linkAnchor);
-		// } {
-		//     // Process a link that goes to a URL within the help system
-		// 	linkText = this.prLinkTextForInternalLink(linkBase, linkAnchor, linkText);
-		// 	linkTarget = this.prLinkTargetForInternalLink(linkBase, linkAnchor, link);
-		// };
-
-		// // Escape special characters in the link text if requested
-		// if(escape) { linkText = this.escapeSpecialChars(linkText) };
-
-		// // Return a well-formatted <a> tag using the target and link text
-		// // ^"<a href=\"" ++ linkTarget ++ "\">" ++ linkText ++ "</a>";
-		// ^"|" ++ linkText ++ "|";
 	}
 
 	*makeArgString {|m, par=true|
@@ -231,134 +183,12 @@ SCDocVimRenderer {
 		// << doc.title.escapeChar($') << "\n"
 		<< "Version: " << Main.version << "\n";
 
-		// stream
-		// << "<body onload='fixTOC();prettyPrint()'>\n";
-
-		// displayedTitle = if(
-		// 	thisIsTheMainHelpFile,
-		// 	{ "SuperCollider " ++ Main.version },
-		// 	{ doc.title }
-		// );
-
-		// stream
-		// << "<div id='toc'>\n"
-		// << "<div id='toctitle'>" << displayedTitle << ":</div>\n"
-		// << "<span class='toc_search'>Filter: <input id='toc_search'></span>";
-		// this.renderTOC(stream, body);
-		// stream << "</div>";
-
-		// stream
-		// << "<div class='contents'>\n"
-		// << "<div id='menubar'></div>\n"
-		// << "<div class='header'>\n";
-
-		// if(thisIsTheMainHelpFile.not) {
-		// 	stream
-		// 	<< "<div id='label'>\n"
-		// 	<< "<span id='folder'>" << folder.asString;
-		// 	if(doc.isExtension) {
-		// 		stream << " (extension)";
-		// 	};
-		// 	stream << "</span>\n";
-
-		// 	doc.categories !? {
-		// 		// Prevent the label from starting with "|".
-		// 		if(folder.asString.size > 0) {
-		// 			stream << " | "
-		// 		};
-
-		// 		stream << "<span id='categories'>"
-
-		// 		<< (doc.categories.collect { | path |
-		// 			// get all the components of a category path ("UGens>Generators>Deterministic")
-		// 			// we link each crumb of the breadcrumbs separately.
-		// 			var pathElems = path.split($>);
-
-		// 			// the href for "UGens" will be "UGens", for "Generators" "UGens>Generators", etc.
-		// 			pathElems.collect { | elem, i |
-		// 				var atag = "<a href='" ++ baseDir +/+ "Browse.html#";
-		// 				atag ++ pathElems[0..i].join(">") ++ "'>"++ elem ++"</a>"
-		// 			}.join("&#8201;&gt;&#8201;"); // &#8201; is a thin space
-
-		// 		}.join(" | "))
-
-		// 		<< "</span>\n";
-		// 	};
-
-		// 	stream << "</div>";
-		// };
-
-		// stream << "<h1>" << displayedTitle;
-		// if(thisIsTheMainHelpFile) {
-		// 	stream << "<span class='headerimage'><img src='" << baseDir << "/images/SC_icon.png'/></span>";
-		// };
-		// if(doc.isClassDoc and: { currentClass.notNil } and: { currentClass != Object }) {
-		// 	stream << "<span id='superclasses'>"
-		// 	<< " : "
-		// 	<< (currentClass.superclasses.collect {|c|
-		// 		"<a href=\"../Classes/"++c.name++".html\">"++c.name++"</a>"
-		// 	}.join(" : "))
-		// 	<< "</span>\n";
-		// };
-		// if(doc.isExtension) {
-		// 	stream
-		// 	<< "<div class='extension-indicator-ctr' title='This help file originates from a third-party quark or plugin for SuperCollider.'>"
-		// 	<< "<img class='extension-indicator-icon' alt='Extension' src='" << baseDir << "/images/plugin.png'>"
-		// 	<< "<span class='extension-indicator-text'>Extension</span>"
-		// 	<< "</div>";
-		// };
-		// stream
-		// << "</h1>\n"
-		// << "<div id='summary'>" << this.escapeSpecialChars(doc.summary) << "</div>\n"
-		// << "</div>\n"
-		// << "<div class='subheader'>\n";
-
-		// if(doc.isClassDoc) {
-		// 	if(currentClass.notNil) {
-		// 		m = currentClass.filenameSymbol.asString;
-		// 		stream << "<div id='filename'>Source: "
-		// 		<< "<a href='%' title='%'>".format(URI.fromLocalPath(m).asString, m)
-		// 		<< m.basename << "</a></div>";
-		// 		if(currentClass.subclasses.notNil) {
-		// 			z = false;
-		// 			stream << "<div id='subclasses'>"
-		// 			<< "Subclasses: "
-		// 			<< (currentClass.subclasses.collect(_.name).sort.collect {|c,i|
-		// 				if(i==4,{z=true;"<span id='hiddensubclasses' style='display:none;'>"},{""})
-		// 				++"<a href=\"../Classes/"++c++".html\">"++c++"</a>"
-		// 			}.join(", "));
-		// 			if(z) {
-		// 				stream << "</span><a class='subclass_toggle' href='#' onclick='javascript:showAllSubclasses(this); return false'>&hellip;&nbsp;see&nbsp;all</a>";
-		// 			};
-		// 			stream << "</div>\n";
-		// 		};
-		// 		if(currentImplClass.notNil) {
-		// 			stream << "<div class='inheritance'>Implementing class: "
-		// 			<< "<a href=\"../Classes/" << currentImplClass.name << ".html\">"
-		// 			<< currentImplClass.name << "</a></div>\n";
-		// 		};
-		// 	} {
-		// 		stream << "<div id='filename'>Location: <b>NOT INSTALLED!</b></div>\n";
-		// 	};
-		// };
-
 		doc.related !? {
 			stream << "\nSee also: "
 			<< (doc.related.collect {|r| this.htmlForLink(r)}.join(" "))
 			<< "\n";
 		};
 
-		// // FIXME: Remove this when conversion to new help system is done!
-		// if(doc.isUndocumentedClass and: {Help.respondsTo('findHelpFile')}) {
-		// 	x = Help.findHelpFile(name);
-		// 	x !? {
-		// 		stream << ("[ <a href='" ++ baseDir ++ "/OldHelpWrapper.html#"
-		// 		++x++"?"++SCDoc.helpTargetDir +/+ doc.path ++ ".html"
-		// 		++"'>old help</a> ]")
-		// 	};
-		// };
-
-		// stream << "</div>\n";
         stream << "\n";
 	}
 
@@ -832,69 +662,6 @@ SCDocVimRenderer {
 				this.renderChildren(stream, node);
 			}
 		);
-	}
-
-	*renderTOC {|stream, node|
-		node.children !? {
-			stream << "<ul class='toc'>";
-			node.children.do {|n|
-				switch(n.id,
-					\DESCRIPTION, {
-						stream << "<li class='toc1'><a href='#description'>Description</a></li>\n";
-						this.renderTOC(stream, n);
-					},
-					\EXAMPLES, {
-						stream << "<li class='toc1'><a href='#examples'>Examples</a></li>\n";
-						this.renderTOC(stream, n);
-					},
-					\CLASSMETHODS, {
-						if(n.notPrivOnly) {
-							stream << "<li class='toc1'><a href='#classmethods'>Class methods</a></li>\n";
-							this.renderTOC(stream, n);
-						};
-					},
-					\INSTANCEMETHODS, {
-						if(n.notPrivOnly) {
-							stream << "<li class='toc1'><a href='#instancemethods'>Instance methods</a></li>\n";
-							this.renderTOC(stream, n);
-						};
-					},
-					\CMETHOD, {
-						stream << "<li class='toc3'>"
-						<< (n.children[0].children.collect{|m|
-							"<a href='#*"++m.text++"'>"++this.escapeSpecialChars(m.text)++"</a> ";
-						}.join(" "))
-						<< "</li>\n";
-					},
-					\IMETHOD, {
-						stream << "<li class='toc3'>"
-						<< (n.children[0].children.collect{|m|
-							"<a href='#-"++m.text++"'>"++this.escapeSpecialChars(m.text)++"</a> ";
-						}.join(" "))
-						<< "</li>\n";
-					},
-					\METHOD, {
-						stream << "<li class='toc3'>"
-						<< (n.children[0].children.collect{|m|
-							"<a href='#."++m.text++"'>"++this.escapeSpecialChars(m.text)++"</a> ";
-						}.join(" "))
-						<< "</li>\n";
-					},
-
-					\SECTION, {
-						stream << "<li class='toc1'><a href='#" << this.escapeSpacesInAnchor(n.text) << "'>"
-						<< this.escapeSpecialChars(n.text) << "</a></li>\n";
-						this.renderTOC(stream, n);
-					},
-					\SUBSECTION, {
-						stream << "<li class='toc2'><a href='#" << this.escapeSpacesInAnchor(n.text) << "'>"
-						<< this.escapeSpecialChars(n.text) << "</a></li>\n";
-						this.renderTOC(stream, n);
-					}
-				);
-			};
-			stream << "</ul>";
-		};
 	}
 
 	*addUndocumentedMethods {|list, body, id2, id, title|
