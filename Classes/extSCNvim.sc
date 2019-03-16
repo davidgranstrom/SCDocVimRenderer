@@ -5,6 +5,7 @@
         if (\SCDocVimRenderer.asClass.notNil
             and:{SCDoc.renderer != \SCDocVimRenderer.asClass}) {
             SCDoc.renderer = SCDocVimRenderer;
+            SCDoc.renderer.postln;
         };
 
         urlString = SCNvimDoc.findHelpFile(text);
