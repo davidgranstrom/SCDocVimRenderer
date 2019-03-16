@@ -312,22 +312,22 @@ SCDocPandocRenderer : SCDocHTMLRenderer {
 // Sections
 			\CLASSMETHODS, {
 				if(node.notPrivOnly) {
-					stream << "<h2><a class='anchor' name='classmethods'>Class Methods</a></h2>\n";
+					stream << "<h2><a class='anchor' name='classmethods'>Class Methods ~</a></h2>\n";
 				};
 				this.renderChildren(stream, node);
 			},
 			\INSTANCEMETHODS, {
 				if(node.notPrivOnly) {
-					stream << "<h2><a class='anchor' name='instancemethods'>Instance Methods</a></h2>\n";
+					stream << "<h2><a class='anchor' name='instancemethods'>Instance Methods ~</a></h2>\n";
 				};
 				this.renderChildren(stream, node);
 			},
 			\DESCRIPTION, {
-				stream << "<h2><a class='anchor' name='description'>Description</a></h2>\n";
+				stream << "<h2><a class='anchor' name='description'>Description ~</a></h2>\n";
 				this.renderChildren(stream, node);
 			},
 			\EXAMPLES, {
-				stream << "<h2><a class='anchor' name='examples'>Examples</a></h2>\n";
+				stream << "<h2><a class='anchor' name='examples'>Examples ~</a></h2>\n";
 				this.renderChildren(stream, node);
 			},
 			\SECTION, {
