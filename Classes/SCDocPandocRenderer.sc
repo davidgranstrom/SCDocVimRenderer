@@ -58,6 +58,160 @@ SCDocPandocRenderer : SCDocHTMLRenderer {
 		stream << "\n\n vim:tw=78:et:ft=help.supercollider:norl:\n";
 	}
 
+    *renderMethod {|stream, node, methodType, cls, icls|
+		var methodTypeIndicator;
+		var methodCodePrefix;
+		var args = node.text ?? ""; // only outside class/instance methods
+		var names = node.children[0].children.collect(_.text);
+		var mstat, sym, m, m2, mname2;
+		var lastargs, args2;
+		var x, maxargs = -1;
+		var methArgsMismatch = false;
+
+		methodTypeIndicator = switch(
+			methodType,
+			\classMethod, { "*" },
+			\instanceMethod, { "-" },
+			\genericMethod, { "" }
+		);
+
+		minArgs = inf;
+		currentMethod = nil;
+		names.do {|mname|
+			methodCodePrefix = switch(
+				methodType,
+				\classMethod, { if(cls.notNil) { cls.name.asString[5..] } { "" } ++ "." },
+				\instanceMethod, {
+					// If the method name contains any valid binary operator character, remove the
+					// "." to reduce confusion.
+					if(mname.asString.any(this.binaryOperatorCharacters.contains(_)), { "" }, { "." })
+				},
+				\genericMethod, { "" }
+			);
+
+			mname2 = this.escapeSpecialChars(mname);
+			if(cls.notNil) {
+				mstat = 0;
+				sym = mname.asSymbol;
+				//check for normal method or getter
+				m = icls !? {icls.findRespondingMethodFor(sym.asGetter)};
+				m = m ?? {cls.findRespondingMethodFor(sym.asGetter)};
+				m !? {
+					mstat = mstat | 1;
+					args = this.makeArgString(m);
+					args2 = m.argNames !? {m.argNames[1..]};
+				};
+				//check for setter
+				m2 = icls !? {icls.findRespondingMethodFor(sym.asSetter)};
+				m2 = m2 ?? {cls.findRespondingMethodFor(sym.asSetter)};
+				m2 !? {
+					mstat = mstat | 2;
+					args = m2.argNames !? {this.makeArgString(m2,false)} ?? {"value"};
+					args2 = m2.argNames !? {m2.argNames[1..]};
+				};
+				maxargs.do {|i|
+					var a = args2 !? args2[i];
+					var b = lastargs[i];
+					if(a!=b and: {a!=nil} and: {b!=nil}) {
+						methArgsMismatch = true;
+					}
+				};
+				lastargs = args2;
+				case
+					{args2.size>maxargs} {
+						maxargs = args2.size;
+						currentMethod = m2 ?? m;
+					}
+					{args2.size<minArgs} {
+						minArgs = args2.size;
+					};
+			} {
+				m = nil;
+				m2 = nil;
+				mstat = 1;
+			};
+
+			x = {
+				stream << "<h3 class='method-code'>"
+				<< "<span class='method-prefix'>" << methodCodePrefix << "</span>"
+				<< "<a class='method-name' name='" << methodTypeIndicator << mname << "' href='"
+				<< baseDir << "/Overviews/Methods.html#"
+				<< mname2 << "'>" << mname2 << "</a>"
+			};
+
+			switch (mstat,
+				// getter only
+				1, { x.value; stream << args; },
+				// getter and setter
+				3, { x.value; },
+				// method not found
+				0, {
+					"SCDoc: In %\n"
+					"  Method %% not found.".format(currDoc.fullPath, methodTypeIndicator, mname2).warn;
+					x.value;
+					stream << ": METHOD NOT FOUND!";
+				}
+			);
+
+			stream << "</h3>\n";
+
+			// has setter
+			if(mstat & 2 > 0) {
+				x.value;
+				if(args2.size<2) {
+					stream << " = " << args << "</h3>\n";
+				} {
+					stream << "_(" << args << ")</h3>\n";
+				}
+			};
+
+			m = m ?? m2;
+			m !? {
+				if(m.isExtensionOf(cls) and: {icls.isNil or: {m.isExtensionOf(icls)}}) {
+					stream << "<div class='extmethod'>From extension in <a href='"
+					<< URI.fromLocalPath(m.filenameSymbol.asString).asString << "'>"
+					<< m.filenameSymbol << "</a></div>\n";
+				} {
+					if(m.ownerClass == icls) {
+						stream << "<div class='supmethod'>From implementing class</div>\n";
+					} {
+						if(m.ownerClass != cls) {
+							m = m.ownerClass.name;
+							m = if(m.isMetaClassName) {m.asString.drop(5)} {m};
+							stream << "<div class='supmethod'>From superclass: <a href='"
+							<< baseDir << "/Classes/" << m << ".html'>" << m << "</a></div>\n";
+						}
+					}
+				};
+			};
+		};
+
+		if(methArgsMismatch) {
+			"SCDoc: In %\n"
+			"  Grouped methods % do not have the same argument signature."
+			.format(currDoc.fullPath, names).warn;
+		};
+
+		// ignore trailing mul add arguments
+		if(currentMethod.notNil) {
+			currentNArgs = currentMethod.argNames.size;
+			if(currentNArgs > 2
+			and: {currentMethod.argNames[currentNArgs-1] == \add}
+			and: {currentMethod.argNames[currentNArgs-2] == \mul}) {
+				currentNArgs = currentNArgs - 2;
+			}
+		} {
+			currentNArgs = 0;
+		};
+
+		if(node.children.size > 1) {
+			stream << "<div class='method'>";
+			this.renderChildren(stream, node.children[1]);
+			stream << "</div>";
+		};
+		currentMethod = nil;
+	}
+
 	*renderSubTree {|stream, node|
 		var f, z, img;
 		switch(node.id,
